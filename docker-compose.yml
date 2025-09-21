@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+
+  springbootapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springbootapp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/logs
+    networks:
+      - opensearch-net
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true" # Disable security for simplicity (not for production)
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+
+  opensearch-dashboards:
+    container_name: dashboard
+    image: opensearchproject/opensearch-dashboards:latest
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # Disable security for simplicity
+    depends_on:
+      - opensearch
+    networks:
+      - opensearch-net
+
+  logstash:
+    container_name: logstash
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:latest
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logs:/logs:ro # Mount the logs directory as read-only
+    depends_on:
+      - opensearch
+      - springbootapp
+    networks:
+      - opensearch-net
+
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net:
+    driver: bridge
