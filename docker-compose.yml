@@ -1,17 +1,35 @@
 version: '3.8'
 services:
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: huan-db
+      MYSQL_USER: huan
+      MYSQL_PASSWORD: huan
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - opensearch-net
+
+
   springbootapp:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: springbootapp
     ports:
-      - "8080:8080"
+      - "8089:8080"
     volumes:
       - ./logs:/logs
     networks:
       - opensearch-net
+    depends_on:
+      - mysql
 
   opensearch:
     image: opensearchproject/opensearch:latest
@@ -54,6 +72,7 @@ services:
       - opensearch-net
 
 volumes:
+  mysql-data:
   opensearch-data:
 
 networks:

@@ -11,4 +11,4 @@ COPY ./target/opensearch-1.0.0.jar app.jar
 EXPOSE 8080
 
 # Command to run the application
-CMD ["java", "-jar", "/app.jar"]
+CMD ["java", "-jar", "-Dspring.profiles.active=linux", "/app.jar"]
